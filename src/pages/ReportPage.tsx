@@ -22,7 +22,8 @@
      }
    };
 
-+  const uploadPhotos = async (files: File[]) => {
++  const uploadPhotos = async (files: Fi
+  }le[]) => {
 +    try {
 +      const response = await apiService.uploadImages(files);
 +      setPhotos(prev => [...prev, ...response.imageUrls]);
