@@ -1,0 +1,115 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  name         String
+  phone        String?
+  role         Role     @default(CITIZEN)
+  avatar       String?
+  isVerified   Boolean  @default(false)
+  organization String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  reports      Report[]
+  updates      ReportUpdate[]
+  ngoProfile   NGOProfile?
+  
+  @@map("users")
+}
+
+model NGOProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  organizationName String
+  description     String
+  website         String?
+  address         String
+  servicesOffered String[]
+  operatingHours  String?
+  capacity        String?
+  isVerified      Boolean  @default(false)
+  rating          Float    @default(0)
+  totalRescues    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedReports Report[]
+  
+  @@map("ngo_profiles")
+}
+
+model Report {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  latitude    Float
+  longitude   Float
+  address     String?
+  photos      String[]
+  status      ReportStatus  @default(REPORTED)
+  urgency     UrgencyLevel  @default(MEDIUM)
+  tags        String[]
+  reportedById String
+  assignedNGOId String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  reportedBy  User          @relation(fields: [reportedById], references: [id])
+  assignedNGO NGOProfile?   @relation(fields: [assignedNGOId], references: [id])
+  updates     ReportUpdate[]
+  
+  @@map("reports")
+}
+
+model ReportUpdate {
+  id        String   @id @default(cuid())
+  reportId  String
+  authorId  String
+  message   String
+  photos    String[]
+  createdAt DateTime @default(now())
+
+  // Relations
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  @@map("report_updates")
+}
+
+enum Role {
+  CITIZEN
+  VOLUNTEER
+  NGO
+  ADMIN
+}
+
+enum ReportStatus {
+  REPORTED
+  IN_PROGRESS
+  RESCUED
+  ADOPTED
+}
+
+enum UrgencyLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
