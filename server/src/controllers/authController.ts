@@ -44,7 +44,11 @@ export const register = async (req: Request, res: Response) => {
     );
 
     // Send welcome email
-    await emailService.sendWelcomeEmail(user.email, user.name);
+    try {
+      await emailService.sendWelcomeEmail(user.email, user.name);
+    } catch (emailError) {
+      console.error('Welcome email failed:', emailError);
+    }
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;

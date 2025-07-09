@@ -9,8 +9,7 @@ interface AuthRequest extends Request {
 
 export const createReport = async (req: AuthRequest, res: Response) => {
   try {
-    const { title, description, latitude, longitude, address, urgency, tags } = req.body;
-    const photos = req.body.photos || [];
+    const { title, description, latitude, longitude, address, urgency, tags, photos } = req.body;
 
     // Get address from coordinates if not provided
     let finalAddress = address;
@@ -26,9 +25,9 @@ export const createReport = async (req: AuthRequest, res: Response) => {
         latitude,
         longitude,
         address: finalAddress,
-        photos,
+        photos: photos || [],
         urgency,
-        tags,
+        tags: tags || [],
         reportedById: req.user.id
       },
       include: {
@@ -268,8 +267,7 @@ export const updateReport = async (req: AuthRequest, res: Response) => {
 export const addReportUpdate = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { message } = req.body;
-    const photos = req.body.photos || [];
+    const { message, photos } = req.body;
 
     // Check if report exists
     const report = await prisma.report.findUnique({
@@ -299,7 +297,7 @@ export const addReportUpdate = async (req: AuthRequest, res: Response) => {
         reportId: id,
         authorId: req.user.id,
         message,
-        photos
+        photos: photos || []
       },
       include: {
         author: {

@@ -1,17 +1,13 @@
 import prisma from '../config/database';
 import { emailService } from './emailService';
-import { smsService } from './smsService';
 
 class NotificationService {
   async notifyNearbyNGOs(report: any) {
     try {
-      // Find NGOs within 50km radius (simplified calculation)
-      const radiusInDegrees = 50 / 111; // Rough conversion
-      
+      // Find verified NGOs (simplified - in production, use proper geospatial queries)
       const nearbyNGOs = await prisma.nGOProfile.findMany({
         where: {
           isVerified: true,
-          // In production, use proper geospatial queries
         },
         include: {
           user: true
@@ -26,15 +22,6 @@ class NotificationService {
           ngo.user.name,
           report
         );
-
-        // Send SMS for critical cases
-        if (report.urgency === 'CRITICAL' && ngo.user.phone) {
-          await smsService.sendCriticalAlert(
-            ngo.user.phone,
-            report.title,
-            report.address
-          );
-        }
       });
 
       await Promise.all(notificationPromises);

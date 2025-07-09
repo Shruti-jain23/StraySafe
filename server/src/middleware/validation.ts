@@ -41,7 +41,8 @@ export const schemas = {
     longitude: Joi.number().min(-180).max(180).required(),
     address: Joi.string().optional(),
     urgency: Joi.string().valid('LOW', 'MEDIUM', 'HIGH', 'CRITICAL').default('MEDIUM'),
-    tags: Joi.array().items(Joi.string()).default([])
+    tags: Joi.array().items(Joi.string()).default([]),
+    photos: Joi.array().items(Joi.string()).default([])
   }),
 
   updateReport: Joi.object({
@@ -50,7 +51,8 @@ export const schemas = {
   }),
 
   addReportUpdate: Joi.object({
-    message: Joi.string().min(5).max(1000).required()
+    message: Joi.string().min(5).max(1000).required(),
+    photos: Joi.array().items(Joi.string()).default([])
   }),
 
   createNGOProfile: Joi.object({

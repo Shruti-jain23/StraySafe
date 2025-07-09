@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 class ApiService {
   private socket: Socket | null = null;
@@ -231,6 +231,10 @@ class ApiService {
 
     this.socket.on('disconnect', () => {
       console.log('Disconnected from server');
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
     });
 
     return this.socket;

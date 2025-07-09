@@ -4,21 +4,40 @@ class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    this.transporter = nodemailer.createTransporter({
-      host: process.env.EMAIL_HOST,
-      port: Number(process.env.EMAIL_PORT),
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+    // Create a test account if no email config is provided
+    this.initializeTransporter();
+  }
+
+  private async initializeTransporter() {
+    if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      this.transporter = nodemailer.createTransporter({
+        host: process.env.EMAIL_HOST,
+        port: Number(process.env.EMAIL_PORT),
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+    } else {
+      // Create test account for development
+      const testAccount = await nodemailer.createTestAccount();
+      this.transporter = nodemailer.createTransporter({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass
+        }
+      });
+    }
   }
 
   async sendWelcomeEmail(email: string, name: string) {
     try {
-      await this.transporter.sendMail({
-        from: `"StraySafe" <${process.env.EMAIL_USER}>`,
+      const info = await this.transporter.sendMail({
+        from: `"StraySafe" <${process.env.EMAIL_USER || 'noreply@straysafe.org'}>`,
         to: email,
         subject: 'Welcome to StraySafe!',
         html: `
@@ -36,6 +55,10 @@ class EmailService {
           </div>
         `
       });
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+      }
     } catch (error) {
       console.error('Send welcome email error:', error);
     }
@@ -43,8 +66,8 @@ class EmailService {
 
   async sendReportNotification(email: string, name: string, report: any) {
     try {
-      await this.transporter.sendMail({
-        from: `"StraySafe" <${process.env.EMAIL_USER}>`,
+      const info = await this.transporter.sendMail({
+        from: `"StraySafe" <${process.env.EMAIL_USER || 'noreply@straysafe.org'}>`,
         to: email,
         subject: `New ${report.urgency.toLowerCase()} priority report: ${report.title}`,
         html: `
@@ -64,6 +87,10 @@ class EmailService {
           </div>
         `
       });
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+      }
     } catch (error) {
       console.error('Send report notification error:', error);
     }
@@ -71,8 +98,8 @@ class EmailService {
 
   async sendStatusUpdateNotification(email: string, name: string, report: any, newStatus: string) {
     try {
-      await this.transporter.sendMail({
-        from: `"StraySafe" <${process.env.EMAIL_USER}>`,
+      const info = await this.transporter.sendMail({
+        from: `"StraySafe" <${process.env.EMAIL_USER || 'noreply@straysafe.org'}>`,
         to: email,
         subject: `Report Update: ${report.title}`,
         html: `
@@ -89,6 +116,10 @@ class EmailService {
           </div>
         `
       });
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+      }
     } catch (error) {
       console.error('Send status update notification error:', error);
     }

@@ -10,7 +10,8 @@
     "test": "jest",
     "migrate": "npx prisma migrate dev",
     "generate": "npx prisma generate",
-    "studio": "npx prisma studio"
+    "studio": "npx prisma studio",
+    "seed": "ts-node src/scripts/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",

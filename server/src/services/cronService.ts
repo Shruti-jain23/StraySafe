@@ -1,6 +1,5 @@
 import cron from 'node-cron';
 import prisma from '../config/database';
-import { emailService } from './emailService';
 
 export const startCronJobs = () => {
   // Send daily summary to NGOs (runs at 9 AM every day)
@@ -17,7 +16,6 @@ export const startCronJobs = () => {
         const pendingReports = await prisma.report.count({
           where: {
             status: 'REPORTED',
-            // Add location-based filtering here
           }
         });
 
@@ -29,8 +27,7 @@ export const startCronJobs = () => {
         });
 
         if (pendingReports > 0 || activeReports > 0) {
-          // Send daily summary email
-          console.log(`Sending daily summary to ${ngo.organizationName}`);
+          console.log(`Daily summary for ${ngo.organizationName}: ${pendingReports} pending, ${activeReports} active`);
         }
       }
     } catch (error) {
@@ -38,7 +35,7 @@ export const startCronJobs = () => {
     }
   });
 
-  // Clean up old notifications (runs weekly)
+  // Clean up old data (runs weekly)
   cron.schedule('0 0 * * 0', async () => {
     console.log('Running cleanup job...');
     
@@ -47,7 +44,7 @@ export const startCronJobs = () => {
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-      await prisma.reportUpdate.deleteMany({
+      const deletedCount = await prisma.reportUpdate.deleteMany({
         where: {
           createdAt: {
             lt: sixMonthsAgo
@@ -55,7 +52,7 @@ export const startCronJobs = () => {
         }
       });
 
-      console.log('Cleanup job completed');
+      console.log(`Cleanup job completed: ${deletedCount.count} old updates removed`);
     } catch (error) {
       console.error('Cleanup job error:', error);
     }
@@ -80,10 +77,9 @@ export const startCronJobs = () => {
         }
       });
 
-      // Send escalation notifications for stale critical reports
+      // Log stale critical reports for escalation
       for (const report of staleReports) {
-        console.log(`Escalating stale report: ${report.title}`);
-        // Send escalation notifications
+        console.log(`Stale critical report detected: ${report.title} (${report.urgency})`);
       }
     } catch (error) {
       console.error('Stale reports check error:', error);
