@@ -10,7 +10,7 @@ export const validate = (schema: Joi.ObjectSchema) => {
         details: error.details.map(detail => detail.message)
       });
     }
-    next();
+    return next();
   };
 };
 
