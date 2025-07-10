@@ -8,7 +8,7 @@ interface AuthRequest extends Request {
   user?: any;
 }
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password, phone, role, organization } = req.body;
 
@@ -18,7 +18,8 @@ export const register = async (req: Request, res: Response) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists with this email' });
+      res.status(400).json({ message: 'User already exists with this email' });
+      return;
     }
 
     // Hash password
@@ -39,7 +40,7 @@ export const register = async (req: Request, res: Response) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id },
-      process.env.JWT_SECRET! as Secret,
+      process.env.JWT_SECRET as Secret,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
@@ -60,11 +61,11 @@ export const register = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
@@ -77,19 +78,21 @@ export const login = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid credentials' });
+      return;
     }
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid credentials' });
+      return;
     }
 
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id },
-      process.env.JWT_SECRET! as Secret,
+      process.env.JWT_SECRET as Secret,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
@@ -103,11 +106,11 @@ export const login = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-export const getProfile = async (req: AuthRequest, res: Response) => {
+export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
@@ -117,7 +120,8 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: 'User not found' });
+      return;
     }
 
     // Remove password from response
@@ -126,11 +130,11 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
     res.json({ user: userWithoutPassword });
   } catch (error) {
     console.error('Get profile error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-export const updateProfile = async (req: AuthRequest, res: Response) => {
+export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, phone, avatar } = req.body;
 
@@ -155,11 +159,11 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Update profile error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-export const changePassword = async (req: AuthRequest, res: Response) => {
+export const changePassword = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
 
@@ -168,13 +172,15 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: 'User not found' });
+      return;
     }
 
     // Verify current password
     const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
-      return res.status(400).json({ message: 'Current password is incorrect' });
+      res.status(400).json({ message: 'Current password is incorrect' });
+      return;
     }
 
     // Hash new password
@@ -189,6 +195,6 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
     console.error('Change password error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
