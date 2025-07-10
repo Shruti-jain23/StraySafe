@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt, { Secret } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import prisma from '../config/database';
 import { emailService } from '../services/emailService';
 
@@ -38,9 +38,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Generate JWT token
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET is not defined');
+    }
+
     const token = jwt.sign(
       { userId: user.id },
-      process.env.JWT_SECRET!,
+      jwtSecret,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
@@ -90,9 +95,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Generate JWT token
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET is not defined');
+    }
+
     const token = jwt.sign(
       { userId: user.id },
-      process.env.JWT_SECRET!,
+      jwtSecret,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
